@@ -103,22 +103,42 @@ function do_version_check() {
 
    [ "$1" == "$2" ] && return 10
 
-   ver1front=`echo $1 | cut -d "." -f -1`
-   ver1back=`echo $1 | cut -d "." -f 2-`
+   if [ -z "$1" ]; then
+       if echo "$2" | grep -q -e '^~'; then return 11; else return 9; fi
+   fi
+   if [ -z "$2" ]; then
+       if echo "$1" | grep -q -e '^~'; then return 9; else return 11; fi
+   fi
+   if echo "$1" | grep -q -e '[0-9]'; then
+       ver1nonnum=$(echo $1 | sed -e 's/\([^0-9]*\)[0-9]\+.*/\1/')
+       ver1num=$(echo $1 | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
+       ver1rest=$(echo $1 | sed -e 's/[^0-9]*[0-9]\+\(.*\)/\1/')
+   else
+       ver1nonnum=$1
+       ver1num=""
+       ver1rest=""
+   fi
 
-   ver2front=`echo $2 | cut -d "." -f -1`
-   ver2back=`echo $2 | cut -d "." -f 2-`
+   if echo "$2" | grep -q -e '[0-9]'; then
+       ver2nonnum=$(echo $2 | sed -e 's/\([^0-9]*\)[0-9]\+.*/\1/')
+       ver2num=$(echo $2 | sed -e 's/[^0-9]*\([0-9]\+\).*/\1/')
+       ver2rest=$(echo $2 | sed -e 's/[^0-9]*[0-9]\+\(.*\)/\1/')
+   else
+       ver2nonnum=$2
+       ver2num=""
+       ver2rest=""
+   fi
 
-   if [ "$ver1front" != "$1" ] || [ "$ver2front" != "$2" ]; then
-       [ "$ver1front" -gt "$ver2front" ] && return 11
-       [ "$ver1front" -lt "$ver2front" ] && return 9
+   if [ "$ver1nonum" != "$1" ] || [ "$ver2nonnum" != "$2" ]; then
+       [[ "$ver1nonnum" > "$ver2nonnum" ]] && return 11
+       [[ "$ver1nonnum" < "$ver2nnum" ]] && return 9
 
-       [ "$ver1front" == "$1" ] || [ -z "$ver1back" ] && ver1back=0
-       [ "$ver2front" == "$2" ] || [ -z "$ver2back" ] && ver2back=0
-       do_version_check "$ver1back" "$ver2back"
+       [ "$ver1num" -gt "$ver2num" ] && return 11
+       [ "$ver1num" -lt "$ver2num" ] && return 9
+       do_version_check "$ver1rest" "$ver2rest"
        return $?
    else
-           [ "$1" -gt "$2" ] && return 11 || return 9
+           [[ "$1" > "$2" ]] && return 11 || return 9
    fi
 }
 
